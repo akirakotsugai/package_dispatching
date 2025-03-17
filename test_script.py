@@ -1,21 +1,72 @@
-def is_bulky(width, height, length):
-    dimensions = [width, height, length]
-    return any(d >= 150 for d in dimensions) or (width * height * length) >= 1000000
+import csv
+from typing import List, Optional
 
-def is_heavy(mass):
-    return mass >= 20
 
-def sort(width, height, length, mass):
-    bulky = is_bulky(width, height, length)
-    heavy = is_heavy(mass)
-    
-    if heavy and bulky:
-        return "REJECTED"
+class Package:
+    STATUS_REJECTED = "REJECTED"
+    STATUS_SPECIAL = "SPECIAL"
+    STATUS_STANDARD = "STANDARD"
+    STATUSES = (STATUS_REJECTED, STATUS_SPECIAL, STATUS_STANDARD,)
 
-    if heavy or bulky:
-        return "SPECIAL"
-    
-    return "STANDARD"
+    def __init__(self, width, height, length, mass):
+        self._width = width
+        self._height = height
+        self._length = length
+        self._mass = mass
+
+    @property
+    def _is_bulky(self) -> bool:
+        dimensions = [self._width, self._height, self._length]
+        return any(d >= 150 for d in dimensions) or (self._width * self._height * self._length) >= 1000000
+
+    @property
+    def _is_heavy(self) -> bool:
+        return self._mass >= 20
+
+    @property
+    def _dimensions(self) -> Optional[List[int]]:
+        try:
+            return [int(self._width), int(self._height), int(self._length), int(self._mass)]
+        except:
+            return None
+
+    @property
+    def is_invalid(self) -> bool:
+        return not self._dimensions
+
+
+    def sort(self) -> str:
+        if (self._is_bulky and self._is_heavy) or self.is_invalid:
+            return self.STATUS_REJECTED
+
+        if self._is_heavy or self._is_bulky:
+            return self.STATUS_SPECIAL
+
+        return self.STATUS_STANDARD
+
+
+class PackagesReport:
+    def __init__(self, packages: List[Package]):
+        self._packages = packages
+
+    @property
+    def total_number(self) -> int:
+        return len(self._packages)
+
+    @staticmethod
+    def get_numbers_per_stack(stack: str):
+
+
+
+
+
+
+def load_packages() -> List[Package]:
+    with open('thoughtful_exercise.csv', newline='') as csvfile:
+        spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
+
+        packages = [Package(*row) for row in spamreader]
+        return packages
     
 def test_standard_case():
     assert sort(50, 60, 70, 10) == "STANDARD"
@@ -73,5 +124,7 @@ def run_all_tests():
     test_case_all_thresholds_maxed_out_but_not_rejected()
 
 if __name__ == "__main__":
-    run_all_tests()
-    print("SUCCESS")
+    # run_all_tests()
+    # print("SUCCESS")
+    packages = load_packages()
+    report = PackagesReport(packages)
